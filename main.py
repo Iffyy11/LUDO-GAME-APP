@@ -26,14 +26,15 @@ current_dice = 1
 rolling = False
 roll_timer = 0
 ROLL_DURATION = 20
-dice_size = 40  # Reduced from 50 to 40 for better visibility
+dice_size = 40  
 dice_rect = pygame.Rect(WIDTH // 2 - dice_size // 2, HEIGHT - dice_size - 60, dice_size, dice_size)
 dragging = False
-button_width, button_height = 60, 28  # Reduce button size
+button_width, button_height = 60, 28 
+
 # Position roll button to the right of the dice
 roll_button = pygame.Rect(dice_rect.right + 10, dice_rect.centery - button_height // 2, button_width, button_height)
 quit_button = pygame.Rect(30, HEIGHT - 50, button_width, button_height)
-restart_button = pygame.Rect(100, HEIGHT - 50, button_width, button_height)
+
 add_player_button = pygame.Rect(170, HEIGHT - 50, button_width, button_height)
 remove_player_button = pygame.Rect(240, HEIGHT - 50, button_width, button_height)
 reset_button = pygame.Rect(310, HEIGHT - 50, button_width, button_height)
@@ -62,15 +63,9 @@ try:
     dice_sound = pygame.mixer.Sound("dice.wav")
 except pygame.error:
     dice_sound = None
-# Add home and win sounds (optional, fallback to dice_sound)
-try:
-    home_sound = pygame.mixer.Sound("dice.wav")  # Replace with home.wav if available
-except pygame.error:
-    home_sound = dice_sound
-try:
-    win_sound = pygame.mixer.Sound("dice.wav")  # Replace with win.wav if available
-except pygame.error:
-    win_sound = dice_sound
+
+
+
 
 # --- Board Logic ---
 def create_paths():
@@ -188,9 +183,7 @@ def move_token(player_id, token_id, steps):
             token_is_home[player_id][token_id] = True
             token_path_indices[player_id][token_id] = -1
             token_positions[player_id][token_id] = get_home_coords(player_id, token_id)
-            # Play home sound and show message
-            if home_sound:
-                home_sound.play()
+            # Show message when token reaches home
             show_message(f"{players[player_id]['name']} token is home!", color=players[player_id]['color'])
             check_winner(player_id)
             return True
@@ -232,6 +225,7 @@ message_color = BLACK
 message_timer = 0
 
 def show_message(text, color=BLACK, duration=60):
+# Show a message on the screen for a set duration
     global message_text, message_color, message_timer
     message_text = text
     message_color = color
@@ -244,13 +238,13 @@ def check_winner(player_id):
     global winner_announced
     if all(token_is_home[player_id]):
         winner_announced = True
-        if win_sound:
-            win_sound.play()
         show_message(f"{players[player_id]['name']} wins!", color=players[player_id]['color'], duration=180)
 
 # --- UI Functions ---
 class InputBox:
+    # InputBox: Handles text input for player names and numbers
     def __init__(self, x, y, w, h, text=''):
+        # Initialize the input box with position, size, and optional text
         self.rect = pygame.Rect(x, y, w, h)
         self.color = BLACK
         self.text = text
@@ -258,6 +252,7 @@ class InputBox:
         self.active = False
 
     def handle_event(self, event):
+        # Handle mouse and keyboard events for text input
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
         if event.type == pygame.KEYDOWN and self.active:
@@ -280,7 +275,11 @@ def setup_screen():
     clock = pygame.time.Clock()
     choosing_players = True
     step = 1
-    num_box = InputBox(WIDTH//2 - 40, HEIGHT//2 - 20, 80, 40)
+    # Enlarge and center input box for better alignment
+    box_width, box_height = 140, 55
+    box_x = WIDTH // 2 - box_width // 2
+    box_y = HEIGHT // 2 + 60
+    num_box = InputBox(box_x, box_y, box_width, box_height)
     input_boxes = []
     while choosing_players:
         # Draw background image if available
@@ -331,9 +330,15 @@ def setup_screen():
             # Decorate player number prompt
             prompt_font = pygame.font.SysFont(None, 32, bold=True)
             prompt_text = prompt_font.render("Enter number of players (2-4)", True, (180,0,80))
-            pygame.draw.rect(screen, (255,255,255), (40, HEIGHT//2 - 80, 420, 40), border_radius=12)
-            pygame.draw.rect(screen, (180,0,80), (40, HEIGHT//2 - 80, 420, 40), 2, border_radius=12)
-            screen.blit(prompt_text, (WIDTH//2 - prompt_text.get_width()//2, HEIGHT//2 - 80))
+            # Enlarge and center prompt above input box
+            prompt_font = pygame.font.SysFont(None, 38, bold=True)
+            prompt_text = prompt_font.render("Enter number of players (2-4)", True, (180,0,80))
+            prompt_rect_width, prompt_rect_height = 340, 50
+            prompt_rect_x = WIDTH // 2 - prompt_rect_width // 2
+            prompt_rect_y = box_y - prompt_rect_height - 18
+            pygame.draw.rect(screen, (255,255,255), (prompt_rect_x, prompt_rect_y, prompt_rect_width, prompt_rect_height), border_radius=14)
+            pygame.draw.rect(screen, (180,0,80), (prompt_rect_x, prompt_rect_y, prompt_rect_width, prompt_rect_height), 2, border_radius=14)
+            screen.blit(prompt_text, (WIDTH//2 - prompt_text.get_width()//2, prompt_rect_y + (prompt_rect_height - prompt_text.get_height())//2))
             num_box.draw(screen)
         elif step == 2:
             # Remove welcome text for player name page
@@ -451,10 +456,8 @@ def draw_control_buttons():
     text = font_small.render("QUIT", True, WHITE)
     screen.blit(text, text.get_rect(center=quit_button.center))
 
-    pygame.draw.rect(screen, BLUE, restart_button, border_radius=8)
-    pygame.draw.rect(screen, BLACK, restart_button, 2, border_radius=8)
-    text = font_small.render("RESTART", True, WHITE)
-    screen.blit(text, text.get_rect(center=restart_button.center))
+
+
 
     pygame.draw.rect(screen, GREEN, add_player_button, border_radius=8)
     pygame.draw.rect(screen, BLACK, add_player_button, 2, border_radius=8)
@@ -508,6 +511,7 @@ def main_game():
     initialize_tokens()
 
     def restart_game():
+# Restart the game to initial state
         global current_player_idx, current_dice, rolling, roll_timer, dice_rolled
         current_player_idx = 0
         current_dice = 1
@@ -517,6 +521,7 @@ def main_game():
         initialize_tokens()
 
     def reset_game():
+# Reset the game and return to player selection
         global num_players, players, current_player_idx, current_dice, rolling, roll_timer, dice_rolled
         num_players = 0
         players.clear()
@@ -530,6 +535,7 @@ def main_game():
         restart_game()
 
     def add_player():
+# Add a new player to the game (max 4)
         global num_players
         if num_players < 4:
             name = f"Player {num_players+1}"
@@ -538,6 +544,9 @@ def main_game():
             initialize_tokens()
 
     def remove_player():
+# Remove the last player (min 2)
+# Setup the initial screen for player selection
+# Main game loop and event handling
         global num_players, current_player_idx
         if num_players > 2:
             players.pop()
@@ -558,8 +567,7 @@ def main_game():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if quit_button.collidepoint(event.pos):
                     quit_game()
-                elif restart_button.collidepoint(event.pos):
-                    restart_game()
+                
                 elif reset_button.collidepoint(event.pos):
                     reset_game()
                 elif add_player_button.collidepoint(event.pos):
@@ -631,6 +639,7 @@ def can_move_any_token(player_id, dice_roll):
     return False
 
 if __name__ == "__main__":
+# Entry point: start the game
     # Background image setup
     background_img = None
     try:
